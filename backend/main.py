@@ -24,8 +24,6 @@ elif torch.cuda.is_available():
 else:
     device = "cpu"
 
-print(device)
-
 model_id = "stabilityai/stable-diffusion-2-1"
 
 if(device != "mps"):
@@ -40,12 +38,15 @@ if torch.backends.mps.is_available():
 
 @app.get("/")
 def generate(prompt: str): 
+    #different guidance scale depending on the "complexity" of the prompt
+    scale = 9 if len(prompt.split(" ")) < 10 else 15
+
     print(prompt)
     if (device != "mps"):
         with autocast(): 
-            image = pipe(prompt, guidance_scale=8.5).images[0]
+            image = pipe(prompt, guidance_scale=scale).images[0]
     else:
-        image = pipe(prompt, guidance_scale=8.5).images[0]
+        image = pipe(prompt, guidance_scale=scale).images[0]
 
     image.save("testimage.png")
     buffer = BytesIO()
