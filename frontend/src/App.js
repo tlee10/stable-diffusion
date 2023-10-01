@@ -7,6 +7,7 @@ import {
   CircularProgress,
   LinearProgress,
   Stack,
+  Box
 } from "@mui/material";
 import axios from "axios";
 
@@ -14,11 +15,12 @@ import axios from "axios";
 const App = () => {
   const [image, setImage] = useState();
   const [prompt, setPrompt] = useState("");
+  const [negPrompt, setNegPrompt] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const generate = async (prompt) => {
+  const generate = async (prompt, negPrompt) => {
     setLoading(true);
-    axios.get(`http://127.0.0.1:8000/?prompt=${prompt}`)
+    axios.get(`http://127.0.0.1:8000/?prompt=${prompt}&negPrompt=${negPrompt}`)
     .then(res => {
       setImage(res.data);
       console.log(res.data)
@@ -46,17 +48,26 @@ const App = () => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            generate(prompt);
+            generate(prompt, negPrompt);
           }}
         >
-          <TextField
-            label="Enter Prompt"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-          />
+          <Box mb={2}>
+            <TextField
+              label="Enter Prompt"
+              variant="outlined"
+              fullWidth
+              margin="dense"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+            <TextField
+              label="Enter Negative Prompt"
+              variant="outlined"
+              fullWidth
+              value={negPrompt}
+              onChange={(e) => setNegPrompt(e.target.value)}
+            />
+          </Box>          
           <Button
             type="submit"
             variant="contained"
