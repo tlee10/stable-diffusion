@@ -1,11 +1,12 @@
 from auth_token import auth_token
-from fastapi import FastAPI, Response
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import torch
 from torch import autocast
 from diffusers import StableDiffusionPipeline
 from io import BytesIO
-import base64 
+import zipfile
 
 app = FastAPI()
 
@@ -37,7 +38,7 @@ if torch.backends.mps.is_available():
     pipe.enable_attention_slicing()
 
 @app.get("/")
-def generate(prompt: str, negPrompt: str): 
+def generate(prompt: str, negPrompt: str, numPrompt:int=1): 
     #different guidance scale depending on the "complexity" of the prompt
     scale = 9 if len(prompt.split(" ")) < 10 else 15
 
@@ -45,13 +46,23 @@ def generate(prompt: str, negPrompt: str):
     print(negPrompt)
     if (device != "mps"):
         with autocast(): 
-            image = pipe(prompt, guidance_scale=scale, negative_prompt=negPrompt).images[0]
+            images = pipe(prompt, guidance_scale=scale, negative_prompt=negPrompt, num_images_per_prompt=numPrompt).images
     else:
-        image = pipe(prompt, guidance_scale=scale, negative_prompt=negPrompt).images[0]
+        images = pipe(prompt, guidance_scale=scale, negative_prompt=negPrompt, num_images_per_prompt=numPrompt).images
 
-    image.save("testimage.png")
-    buffer = BytesIO()
-    image.save(buffer, format="PNG")
-    imgstr = base64.b64encode(buffer.getvalue())
+    print(images)
 
-    return Response(content=imgstr, media_type="image/png")
+    # Create a BytesIO stream to hold the zip file
+    zip_buffer = BytesIO()
+
+    # Create a zip file and add the images to it
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for i, img in enumerate(images):
+            img_bytes = BytesIO()
+            img.save(img_bytes, format="PNG")
+            img_bytes.seek(0)
+            zipf.writestr(f"image_{i + 1}.png", img_bytes.read())
+
+    # Return the zip file as a streaming response
+    zip_buffer.seek(0)
+    return StreamingResponse(iter([zip_buffer.getvalue()]), media_type="application/zip")
