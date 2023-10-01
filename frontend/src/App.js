@@ -18,7 +18,7 @@ const App = () => {
   const [negPrompt, setNegPrompt] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const generate = async (prompt) => {
+  const generate = async (prompt, negPrompt) => {
     setLoading(true);
     axios.get(`http://127.0.0.1:8000/?prompt=${prompt}&negPrompt=${negPrompt}`)
     .then(res => {
