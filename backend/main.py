@@ -37,16 +37,17 @@ if torch.backends.mps.is_available():
     pipe.enable_attention_slicing()
 
 @app.get("/")
-def generate(prompt: str): 
+def generate(prompt: str, negPrompt: str): 
     #different guidance scale depending on the "complexity" of the prompt
     scale = 9 if len(prompt.split(" ")) < 10 else 15
 
     print(prompt)
+    print(negPrompt)
     if (device != "mps"):
         with autocast(): 
-            image = pipe(prompt, guidance_scale=scale).images[0]
+            image = pipe(prompt, guidance_scale=scale, negative_prompt=negPrompt).images[0]
     else:
-        image = pipe(prompt, guidance_scale=scale).images[0]
+        image = pipe(prompt, guidance_scale=scale, negative_prompt=negPrompt).images[0]
 
     image.save("testimage.png")
     buffer = BytesIO()
