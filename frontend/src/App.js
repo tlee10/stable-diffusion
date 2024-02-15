@@ -25,7 +25,12 @@ const App = () => {
   const generate = async (prompt, negPrompt) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://127.0.0.1:8000/?prompt=${prompt}&negPrompt=${negPrompt}&numPrompt=${4}`); 
+
+      if(!prompt){
+        throw new Error("Prompt is empty!")
+      }
+
+      const response = await fetch(`http://127.0.0.1:8000/?prompt=${prompt}&negPrompt=${negPrompt}&numPrompt=${1}`); 
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -63,6 +68,7 @@ const App = () => {
 
     } catch (error) {
       console.error("Error fetching images:", error);
+      alert(error)
     } finally {
       setLoading(false);
     }
@@ -127,7 +133,7 @@ const App = () => {
           //     width="100%"
           //   />
           // </div>
-          <ImageList cols={2}>
+          <ImageList cols={1}>
             {image.map((data, index) => (
               <ImageListItem key={index}>
                 <img                  
